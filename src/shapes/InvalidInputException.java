@@ -2,7 +2,7 @@ package shapes;
 
 /**
  * Signals invalid input data.
- *
+ * <p>
  * It is a checked exception, so the caller has to deal with it: it must either
  * catch it or pass it on. Therefore, an invalid input file cannot be ignored.
  */

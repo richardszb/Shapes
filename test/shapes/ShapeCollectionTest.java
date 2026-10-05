@@ -53,7 +53,7 @@ public class ShapeCollectionTest {
         assertEquals("Square", largest.getTypeName());
         assertEquals(16.0, largest.boundingBoxArea(), 0.001);
 
-        assertSame(collection.getShapes().get(0), largest);
+        assertSame(collection.getShapes().getFirst(), largest);
     }
 
     @Test
