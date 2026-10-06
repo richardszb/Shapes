@@ -48,7 +48,7 @@ The program refuses the file, with a message naming the shape (e.g. `Shape 2: ..
 
 ## Running the program
 
-The project needs **JDK 17 or newer**.
+The project needs **JDK 23 or newer**.
 
 ### In IntelliJ IDEA
 
