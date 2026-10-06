@@ -126,14 +126,14 @@ public class ShapeCollection {
     public void report(PrintStream out) {
         out.println("Shapes in the collection:");
         for (Shape shape : shapes) {
-            out.println(shape + ", bounding box area: " + String.format( "%.2f", shape.boundingBoxArea()));
+            out.println(shape + ", bounding box area: " + String.format(Locale.ROOT, "%.2f", shape.boundingBoxArea()));
         }
         Shape largest = findLargestBoundingBox();
         if (largest == null) {
             out.println("The collection is empty.");
         } else {
             out.println("\nThe shape with the largest bounding box: " + largest);
-            out.println("Its bounding box: " + largest.getBoundingBox() + ", area: " + String.format("%.2f", largest.boundingBoxArea()));
+            out.println("Its bounding box: " + largest.getBoundingBox() + ", area: " + String.format(Locale.ROOT, "%.2f", largest.boundingBoxArea()));
         }
     }
 

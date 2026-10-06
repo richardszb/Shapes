@@ -1,5 +1,7 @@
 package shapes;
 
+import java.util.Locale;
+
 /// An axis-parallel rectangle (the bounding box of a shape).
 /// The object is immutable: once created, its corners cannot be changed.
 public final class BoundingBox {
@@ -66,6 +68,6 @@ public final class BoundingBox {
 
     @Override
     public String toString() {
-        return String.format("[(%.2f, %.2f) - (%.2f, %.2f)]", minX, minY, maxX, maxY);
+        return String.format(Locale.ROOT, "[(%.2f, %.2f) - (%.2f, %.2f)]", minX, minY, maxX, maxY);
     }
 }

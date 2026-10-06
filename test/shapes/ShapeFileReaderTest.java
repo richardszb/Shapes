@@ -90,8 +90,8 @@ public class ShapeFileReaderTest {
 
     @Test
     public void missingDataIsRejected() throws Exception {
-        assertInvalid("2\nk 0 0 2\nh 1 1\n", "data is missing"); // Triangle missing size
-        assertInvalid("3\nk 0 0 2\n", "data is missing"); // Missing whole shape
+        assertInvalid("2\nk 0 0 2\nh 1 1\n", "data is missing");
+        assertInvalid("3\nk 0 0 2\n", "data is missing");
     }
 
     @Test
