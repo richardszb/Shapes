@@ -87,7 +87,7 @@ Results are written to the standard output, errors to the standard error. The ex
 | `test3.txt`        | Area tie: the first shape in the file wins (the square, area 16.00)         |
 | `test_invalid.txt` | Error: `Shape 2: Unknown shape code: x`                                     |
 
-If several shapes share the largest area, the first one in the file is the result. If the collection is empty, there is no result.
+If several shapes share the largest area, the first one in the file is the result. If the collection is empty, there is no result. Reading a second file adds its shapes after the shapes already loaded; a file that is refused changes nothing.
 
 ## Running the tests
 
@@ -98,15 +98,18 @@ The tests are JUnit 4 tests in the `test` folder.
 
   ```
   javac -encoding UTF-8 -cp build/classes:junit-4.13.2.jar:hamcrest-core-1.3.jar -d build/test-classes test/shapes/*.java
-  java -cp build/classes:build/test-classes:junit-4.13.2.jar:hamcrest-core-1.3.jar org.junit.runner.JUnitCore shapes.ShapeTest shapes.ShapeCollectionTest shapes.ShapeFileReaderTest shapes.MainTest
+  java -cp build/classes:build/test-classes:junit-4.13.2.jar:hamcrest-core-1.3.jar org.junit.runner.JUnitCore shapes.BoundingBoxTest shapes.ShapeTest shapes.ShapeCollectionTest shapes.ShapeFileReaderTest shapes.MainTest
   ```
+
+All 91 tests pass.
 
 | Test class            | What it covers                                                                                   |
 | --------------------- | ------------------------------------------------------------------------------------------------ |
-| `ShapeTest`           | Constructor checks, validation of invalid sizes or coordinates, the bounding box of each shape   |
-| `ShapeCollectionTest` | Finding the largest bounding box, tie (the first shape wins), empty collection, read-only list   |
-| `ShapeFileReaderTest` | Parsing valid files and every kind of invalid input listed above                                 |
-| `MainTest`            | The whole program: output, asking for the file name, error messages and exit codes               |
+| `BoundingBoxTest`     | Width, height and area, degenerate boxes, rejected corners (minimum above maximum, NaN), text form with a decimal point |
+| `ShapeTest`           | For every kind of shape: rejected sizes (zero, negative, NaN, infinite) and coordinates (NaN, infinite), accepted edge values (tiny size, negative center), the bounding box and its area, independence of the position, codes and type names |
+| `ShapeCollectionTest` | Finding the largest bounding box: each kind of shape can win, first/middle/last position, tie (the first shape wins), far away shapes, empty collection, reading a second file, a refused file keeps the shapes loaded before, read-only list |
+| `ShapeFileReaderTest` | Parsing valid files (case-insensitive codes, decimal and negative numbers, Windows line endings, zero shapes) and every kind of invalid input listed above, file name problems (null, empty, blank, directory, missing file) |
+| `MainTest`            | The whole program: output of all shapes and of the winner, decimal point whatever the language settings are, asking for the file name, empty collection, error messages, nothing on the output after an error, exit codes |
 
 The API documentation can be generated in IntelliJ IDEA with *Tools → Generate JavaDoc*.
 

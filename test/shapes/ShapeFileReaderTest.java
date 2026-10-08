@@ -36,6 +36,7 @@ public class ShapeFileReaderTest {
         InvalidInputException ex = assertThrows(InvalidInputException.class, () -> collection.read(filename));
         assertTrue("Unexpected message: " + ex.getMessage(),
                 ex.getMessage().toLowerCase().contains(expectedInMessage.toLowerCase()));
+        assertEquals("The collection must stay empty after an error", 0, collection.size());
     }
 
     private String createFile(String content) throws IOException {
@@ -47,7 +48,7 @@ public class ShapeFileReaderTest {
     // --- Valid input ---
 
     @Test
-    public void sampleOfTheAssignmentIsParsed() throws Exception {
+    public void sampleFileIsParsed() throws Exception {
         ShapeCollection collection = new ShapeCollection();
         collection.read(createFile(SAMPLE));
 
@@ -107,5 +108,145 @@ public class ShapeFileReaderTest {
     @Test
     public void coordinateMustBeANumber() throws Exception {
         assertInvalid("1\nk x 0 2", "expected a number");
+    }
+
+    // --- More valid input ---
+
+    @Test
+    public void zeroShapesIsAValidFile() throws Exception {
+        ShapeCollection collection = new ShapeCollection();
+        collection.read(createFile("0\n"));
+        assertEquals(0, collection.size());
+    }
+
+    @Test
+    public void everyKindOfShapeIsCreatedFromItsCode() throws Exception {
+        ShapeCollection collection = new ShapeCollection();
+        collection.read(createFile("4\nk 0 0 1\nh 0 0 1\nn 0 0 1\ns 0 0 1\n"));
+
+        assertTrue(collection.getShapes().get(0) instanceof Circle);
+        assertTrue(collection.getShapes().get(1) instanceof RegularTriangle);
+        assertTrue(collection.getShapes().get(2) instanceof Square);
+        assertTrue(collection.getShapes().get(3) instanceof RegularHexagon);
+    }
+
+    @Test
+    public void shapeCodeIsCaseInsensitive() throws Exception {
+        ShapeCollection collection = new ShapeCollection();
+        collection.read(createFile("4\nK 0 0 1\nH 0 0 1\nN 0 0 1\nS 0 0 1\n"));
+        assertEquals(4, collection.size());
+    }
+
+    @Test
+    public void valuesAreStoredAsWritten() throws Exception {
+        ShapeCollection collection = new ShapeCollection();
+        collection.read(createFile("1\nk -1.5 2.25 0.5\n"));
+
+        Shape shape = collection.getShapes().get(0);
+        assertEquals(-1.5, shape.getCenterX(), 1e-9);
+        assertEquals(2.25, shape.getCenterY(), 1e-9);
+        assertEquals(0.5, shape.getSize(), 1e-9);
+    }
+
+    @Test
+    public void windowsLineEndingsAndMissingFinalNewlineAreAccepted() throws Exception {
+        ShapeCollection collection = new ShapeCollection();
+        collection.read(createFile("2\r\nk 0 0 2\r\nn 1 1 3"));
+        assertEquals(2, collection.size());
+    }
+
+    // --- File name problems ---
+
+    @Test
+    public void nullFileNameIsRejected() {
+        ShapeCollection collection = new ShapeCollection();
+        assertThrows(NullPointerException.class, () -> collection.read(null));
+    }
+
+    @Test
+    public void emptyAndBlankFileNamesAreFileProblems() {
+        ShapeCollection collection = new ShapeCollection();
+        assertThrows(IOException.class, () -> collection.read(""));
+        assertThrows(IOException.class, () -> collection.read("   "));
+    }
+
+    @Test
+    public void directoryInsteadOfFileIsAFileProblem() {
+        ShapeCollection collection = new ShapeCollection();
+        assertThrows(IOException.class, () -> collection.read(folder.getRoot().getPath()));
+    }
+
+    // --- More invalid content ---
+
+    @Test
+    public void fileWithOnlyWhitespaceIsRejected() throws Exception {
+        assertInvalid("  \n\n \t\n", "must start with the number of shapes");
+    }
+
+    @Test
+    public void countMustBeAWholeNumber() throws Exception {
+        assertInvalid("2.5\nk 0 0 2\nk 0 0 2\n", "must start with the number");
+        assertInvalid("99999999999\nk 0 0 2\n", "must start with the number");
+    }
+
+    @Test
+    public void moreShapesThanDeclaredAreRejected() throws Exception {
+        assertInvalid("1\nk 0 0 2\nn 1 1 3\n", "more data than expected");
+    }
+
+    @Test
+    public void shapeWithOnlyACodeIsRejected() throws Exception {
+        assertInvalid("1\nk\n", "data is missing");
+    }
+
+    @Test
+    public void shapeCodeMustBeASingleLetter() throws Exception {
+        assertInvalid("1\nkk 0 0 2\n", "unknown shape code: kk");
+    }
+
+    @Test
+    public void numberInPlaceOfTheShapeCodeIsRejected() throws Exception {
+        assertInvalid("2\nk 0 0 2\n5 0 0 1\n", "unknown shape code: 5");
+    }
+
+    @Test
+    public void sizeMustBeANumber() throws Exception {
+        assertInvalid("1\nk 0 0 big\n", "expected a number");
+    }
+
+    @Test
+    public void decimalCommaIsRejected() throws Exception {
+        assertInvalid("1\nk 0 0 1,5\n", "expected a number");
+    }
+
+    @Test
+    public void sizeMustBePositive() throws Exception {
+        assertInvalid("1\nk 0 0 0\n", "positive");
+        assertInvalid("1\nn 0 0 -3\n", "positive");
+        assertInvalid("1\nh 0 0 -0.5\n", "positive");
+    }
+
+    @Test
+    public void notANumberAndInfinityAreRejected() throws Exception {
+        assertInvalid("1\nk NaN 0 2\n", "finite");
+        assertInvalid("1\nk 0 Infinity 2\n", "finite");
+        assertInvalid("1\ns 0 0 Infinity\n", "finite");
+        assertInvalid("1\ns 0 0 -Infinity\n", "positive");
+    }
+
+    @Test
+    public void tooBigNumberIsRejected() throws Exception {
+        assertInvalid("1\nk 0 0 " + "9".repeat(400) + "\n", "finite");
+    }
+
+    @Test
+    public void errorMessageNamesTheInvalidShape() throws Exception {
+        assertInvalid("3\nk 0 0 1\nn 0 0 2\nh 0 0 abc\n", "Shape 3");
+        assertInvalid("3\nk 0 0 1\nn 0 0 -2\nh 0 0 3\n", "Shape 2");
+    }
+
+    @Test
+    public void invalidShapeAfterValidOnesLeavesNothingLoaded() throws Exception {
+        assertInvalid("3\nk 0 0 1\nn 0 0 2\nx 0 0 3\n", "Shape 3");
     }
 }

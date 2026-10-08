@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Locale;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -99,5 +100,71 @@ public class MainTest {
         assertEquals(Main.EXIT_ERROR, run("", createFile("1\nx 0 0 2\n")));
         assertTrue(errors(), errors().contains("Invalid input!"));
         assertTrue(errors(), errors().contains("Unknown shape code: x"));
+    }
+
+    // --- Output ---
+
+    @Test
+    public void everyShapeIsListedWithTheAreaOfItsBoundingBox() throws Exception {
+        assertEquals(Main.EXIT_OK, run("", createFile(SINGLE_WINNER)));
+        assertTrue(output(), output().contains("Square {center=(0.0, 0.0), size=2.0}, bounding box area: 4.00"));
+        assertTrue(output(), output().contains("Circle {center=(5.0, 5.0), size=5.0}, bounding box area: 100.00"));
+        assertTrue(output(), output().contains("Regular Triangle {center=(2.0, 2.0), size=3.0}, bounding box area: 7.79"));
+    }
+
+    @Test
+    public void boundingBoxOfTheWinnerIsPrinted() throws Exception {
+        assertEquals(Main.EXIT_OK, run("", createFile(SINGLE_WINNER)));
+        assertTrue(output(), output().contains("Its bounding box: [(0.00, 0.00) - (10.00, 10.00)], area: 100.00"));
+    }
+
+    @Test
+    public void decimalPointIsUsedWhateverTheLanguageIs() throws Exception {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("hu-HU"));
+            assertEquals(Main.EXIT_OK, run("", createFile(SINGLE_WINNER)));
+            assertTrue(output(), output().contains("bounding box area: 7.79"));
+            assertTrue(output(), output().contains("area: 100.00"));
+        } finally {
+            Locale.setDefault(original);
+        }
+    }
+
+    @Test
+    public void emptyCollectionIsReportedWithoutError() throws Exception {
+        assertEquals(Main.EXIT_OK, run("", createFile("0\n")));
+        assertTrue(output(), output().contains("The collection is empty."));
+        assertEquals("", errors());
+    }
+
+    // --- Errors ---
+
+    @Test
+    public void nothingIsPrintedToTheResultsForInvalidContent() throws Exception {
+        assertEquals(Main.EXIT_ERROR, run("", createFile("2\nk 0 0 2\nn 0 0 -1\n")));
+        assertEquals("", output());
+        assertTrue(errors(), errors().contains("Shape 2"));
+    }
+
+    @Test
+    public void directoryInsteadOfFileIsAnError() {
+        assertEquals(Main.EXIT_ERROR, run("", folder.getRoot().getPath()));
+        assertTrue(errors(), errors().contains("Could not read the file"));
+        assertEquals("", output());
+    }
+
+    @Test
+    public void fileNameAskedFromTheUserMayBeMissing() throws Exception {
+        String missing = new File(folder.getRoot(), "missing.txt").getPath();
+
+        assertEquals(Main.EXIT_ERROR, run(missing + System.lineSeparator()));
+        assertTrue(errors(), errors().contains("Could not read the file"));
+    }
+
+    @Test
+    public void exitCodesAreZeroForSuccessAndOneForError() {
+        assertEquals(0, Main.EXIT_OK);
+        assertEquals(1, Main.EXIT_ERROR);
     }
 }

@@ -27,10 +27,12 @@ public class ShapeCollection {
      * are added only at the end of a successful reading.
      *
      * @param filename the name of the file to read
+     * @throws NullPointerException if the file name is null
      * @throws IOException if the file cannot be found or read
      * @throws InvalidInputException if the content of the file is invalid
      */
     public void read(String filename) throws IOException, InvalidInputException {
+        Objects.requireNonNull(filename, "The file name must not be null");
 
         List<Shape> loaded = new ArrayList<>();
 

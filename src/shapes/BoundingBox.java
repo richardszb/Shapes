@@ -16,10 +16,13 @@ public final class BoundingBox {
      * @param minY the smallest y coordinate (bottom side)
      * @param maxX the largest x coordinate (right side)
      * @param maxY the largest y coordinate (top side)
-     * @throws IllegalArgumentException if a minimum is greater than the
-     * corresponding maximum
-     */
+     * @throws IllegalArgumentException if a coordinate is not a number, or a
+     * minimum is greater than the corresponding maximum
+     * */
     public BoundingBox(double minX, double minY, double maxX, double maxY) {
+        if (Double.isNaN(minX) || Double.isNaN(minY) || Double.isNaN(maxX) || Double.isNaN(maxY)) {
+            throw new IllegalArgumentException("Invalid bounding box: a coordinate is not a number");
+        }
         if (minX > maxX || minY > maxY) {
             throw new IllegalArgumentException("Invalid bounding box: the minimum is greater than the maximum");
         }
